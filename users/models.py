@@ -114,5 +114,20 @@ class Rider(models.Model):
         return f"Rider: {self.user.email}"
 
 
+# Cache invalidation signals
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+from django.core.cache import cache
 
+@receiver(post_save, sender=User)
+def invalidate_cache_on_user_save(sender, instance, **kwargs):
+    """Clear user stats cache when a user is created or updated"""
+    cache.delete('user_stats_data')
+    print(f"✓ Cache invalidated: User {instance.email} was saved")
+
+@receiver(post_delete, sender=User)
+def invalidate_cache_on_user_delete(sender, instance, **kwargs):
+    """Clear user stats cache when a user is deleted"""
+    cache.delete('user_stats_data')
+    print(f"✓ Cache invalidated: User {instance.email} was deleted")
 
